@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AISHA · عائشة</title>
+<meta name="description" content="Ustoza uchun maxsus dars. Imtihon — bitta savol ☕">
+<meta property="og:title" content="AISHA · عائشة">
+<meta property="og:description" content="Ustoza uchun maxsus dars. Imtihon — bitta savol ☕">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#f5ece6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg fill='%23d9b98c'%3E%3Crect x='8' y='8' width='16' height='16'/%3E%3Crect x='8' y='8' width='16' height='16' transform='rotate(45 16 16)'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="sky" id="sky" aria-hidden="true">
+  <div class="pattern"></div>
+  <div class="moon"></div>
+</div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<nav class="steps" id="steps" aria-label="Dars rejasi">
+  <i></i><i></i><i></i><i></i><em id="stepLabel">Muqaddima</em>
+</nav>
+
+<button class="sound on" id="soundBtn" type="button" aria-label="Musiqani yoqish / o'chirish" title="Musiqa">
+  <span class="eq"><b></b><b></b><b></b></span>
+  <svg class="mute" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 9.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+</button>
+
+<main id="app">
+
+  <!-- 0 · Muqaddima -->
+  <section class="scene active" data-scene="intro">
+    <div class="card hero">
+      <p class="eyebrow">Assalomu alaykum, ustoza</p>
+      <h1 class="name-ar" lang="ar" dir="rtl">عَائِشَة</h1>
+      <p class="name-lat">AISHA</p>
+      <div class="divider"><span>✦</span></div>
+      <p class="lead">Odatda dars berasiz <b>siz</b>. Bugun esa rollar almashadi:<br><b>ustoz — men</b>, <b>talaba — siz</b> 😄</p>
+      <p class="muted">Dars qisqa. Imtihon esa bor-yo'g'i bitta savoldan iborat.</p>
+      <button class="btn primary" id="startBtn" type="button">Darsni boshlash</button>
+      <p class="hint">🎧 Ovoz yoqilgan holda ochish tavsiya etiladi</p>
+    </div>
+  </section>
+
+  <!-- 1 · Lug'at -->
+  <section class="scene" data-scene="vocab">
+    <div class="card">
+      <p class="eyebrow">1-dars · Lug'at</p>
+      <h2>Bugungi to'rtta so'z</h2>
+      <p class="muted">Kartochkalarni bosing — orqasida tarjimasi bor.</p>
+      <div class="flash-grid">
+        <button class="flash" type="button"><span class="front" lang="ar">شَاي</span><span class="back"><b>Choy</b>Bugungi darsning bosh qahramoni ☕</span></button>
+        <button class="flash" type="button"><span class="front" lang="ar">صُحْبَة</span><span class="back"><b>Hamrohlik</b>«Suhbat» so'zining asli. Siz bilardingiz, shunchaki eslatdim 😉</span></button>
+        <button class="flash" type="button"><span class="front" lang="ar">نَعَم</span><span class="back"><b>Ha</b>Eng muhim so'z. Imtihonda albatta chiqadi ⭐</span></button>
+        <button class="flash" type="button"><span class="front"><span class="strike" lang="ar">لَا</span></span><span class="back"><b>Yo'q</b>Bu so'z bugungi dars dasturidan chiqarildi 🚫</span></button>
+      </div>
+      <button class="btn primary" id="vocabNext" type="button">Yodladim →</button>
+    </div>
+  </section>
+
+  <!-- 2 · Grammatika -->
+  <section class="scene" data-scene="grammar">
+    <div class="card">
+      <p class="eyebrow">2-dars · Grammatika</p>
+      <h2>Gapni i'rob qiling</h2>
+      <p class="sentence" lang="ar" dir="rtl">عَائِشَةُ مُوَافِقَةٌ</p>
+      <p class="muted">«Aisha rozi»</p>
+      <div class="options" id="grammarOpts">
+        <button class="opt" type="button" data-a="a">Ismiy gap: mubtado + xabar, ikkalasi marfu'</button>
+        <button class="opt" type="button" data-a="b">Fe'liy gap</button>
+        <button class="opt" type="button" data-a="c">Bu gap hali tasdiqlanmagan 🤔</button>
+      </div>
+      <div class="feedback" id="grammarFb" hidden></div>
+      <button class="btn primary" id="grammarNext" type="button" hidden>Imtihonga o'tish →</button>
+    </div>
+  </section>
+
+  <!-- 3 · Imtihon -->
+  <section class="scene" data-scene="exam">
+    <div class="card">
+      <p class="eyebrow">Yakuniy imtihon</p>
+      <div id="examTea"></div>
+      <p class="question">Aisha, nikohdan keyin men bilan bir piyola choy ichib, uzoq-uzoq suhbatlashishga rozimisiz?</p>
+      <div class="answer-row" id="answerRow">
+        <button class="btn primary yes" id="yesBtn" type="button">Ha · <span lang="ar">نَعَم</span></button>
+        <button class="btn ghost no" id="noBtn" type="button"><span class="lbl">Yo'q</span> · <span lang="ar">لَا</span></button>
+      </div>
+      <p class="hint">Variant ikkita. To'g'ri javob — bitta 😏</p>
+    </div>
+  </section>
+
+  <!-- 3b · Rad etish bo'limi -->
+  <section class="scene" data-scene="reject">
+    <div class="card form-card">
+      <p class="eyebrow">Rad etish bo'limi</p>
+      <h2>📋 Ariza №001</h2>
+      <ul class="log" id="rejectLog"></ul>
+      <div class="bar"><span id="rejectBar"></span></div>
+      <div id="twist" hidden>
+        <p class="muted">Mayli, savolni boshqacha qo'yaman, ustoza:</p>
+        <p class="question small">«Nikohdan keyin men bilan choy ichishga rozi <u>emas</u>misiz?»</p>
+        <p class="sentence sm" lang="ar" dir="rtl">أَلَسْتِ مُوَافِقَةً؟</p>
+        <div class="answer-row" id="twistRow">
+          <button class="btn primary" type="button" data-twist="bala"><span lang="ar">بَلَى</span></button>
+          <button class="btn soft" type="button" data-twist="naam"><span lang="ar">نَعَم</span></button>
+        </div>
+        <div class="feedback" id="twistFb" hidden></div>
+        <button class="btn primary" id="twistNext" type="button" hidden>Davom etish →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3c · Oxirgi variantlar -->
+  <section class="scene" data-scene="last">
+    <div class="card">
+      <p class="eyebrow">Yakuniy variantlar</p>
+      <h2>Javobni tanlang</h2>
+      <p class="muted">Barcha variantlar sinchkovlik bilan tekshirilgan ✓</p>
+      <div class="options">
+        <button class="opt" type="button" data-yes="ha">Ha ✓</button>
+        <button class="opt" type="button" data-yes="albatta">Albatta</button>
+        <button class="opt" type="button" data-yes="inshaalloh">Inshaalloh, ha</button>
+        <button class="opt" type="button" data-yes="damlayman">Ha, lekin choyni men damlayman ☕</button>
+      </div>
+      <button class="tiny-no" id="stubbornNo" type="button" data-s="0">Baribir yo'q</button>
+    </div>
+  </section>
+
+  <!-- 4 · Natija -->
+  <section class="scene" data-scene="final">
+    <div class="card final">
+      <div id="finalTea"></div>
+      <p class="yes-ar" lang="ar" dir="rtl">نَعَم</p>
+      <p class="eyebrow">Qaror qabul qilindi ✓</p>
+      <p class="lead" id="finalLine"></p>
+
+      <div class="contract">
+        <h3>Choy shartnomasi <span lang="ar">· عَقْدُ الشَّاي</span></h3>
+        <ol>
+          <li>Choy doim issiq, suhbat doim samimiy bo'ladi.</li>
+          <li>Mavzular: ilm, kitoblar, arab tili — kerak bo'lsa, i'rob ham.</li>
+          <li>Ustoza xatoimni topsa — navbatdagi choyni men damlayman.</li>
+          <li>«<span lang="ar">لَا</span>» so'zi ushbu shartnomada ishlatilmaydi.</li>
+        </ol>
+        <div class="signs">
+          <div><span>Aisha</span><em>✓ rozi</em></div>
+          <div><span>Men</span><em>✓ allaqachon rozi</em></div>
+        </div>
+      </div>
+
+      <blockquote>
+        Mutanabbiy aytgan:
+        <span class="ar" lang="ar" dir="rtl">وَخَيْرُ جَلِيسٍ فِي الزَّمَانِ كِتَابُ</span>
+        «Zamonning eng yaxshi hamnishini — kitob». Men faqat ikkinchi o'rinni so'rayman. Choy bilan ☕
+      </blockquote>
+
+      <p class="note">Hazil bir chetda — niyat jiddiy va halol. Haqiqiy javobingizni shoshilmasdan, o'zingizga qulay vaqtda aytsangiz bo'ladi.</p>
+
+      <div class="answer-row">
+        <button class="btn primary" id="shareBtn" type="button">Javobni yuborish 📨</button>
+        <button class="btn soft" id="restartBtn" type="button">Darsni qaytadan</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<p class="credits">Musiqa: Chopin — Nocturne Op. 9 No. 2 (Frank Levy) · Elgar — Salut d'amour (Emanuel Salvador, Pau Casan, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>) · Debussy — Clair de lune · Mendelssohn — To'y marshi. Yozuvlar <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener">Wikimedia Commons</a>'dan.</p>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript><p class="noscript">Bu sahifa ishlashi uchun JavaScript kerak.</p></noscript>
+
+<script src="music.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
