@@ -24,7 +24,7 @@
 <canvas id="confetti" aria-hidden="true"></canvas>
 
 <nav class="steps" id="steps" aria-label="Dars rejasi">
-  <i></i><i></i><i></i><i></i><em id="stepLabel">Muqaddima</em>
+  <i></i><i></i><i></i><i></i><i></i><i></i><em id="stepLabel">Muqaddima</em>
 </nav>
 
 <button class="sound on" id="soundBtn" type="button" aria-label="Musiqani yoqish / o'chirish" title="Musiqa">
@@ -42,9 +42,28 @@
       <p class="name-lat">AISHA</p>
       <div class="divider"><span>✦</span></div>
       <p class="lead">Odatda dars berasiz <b>siz</b>. Bugun esa rollar almashadi:<br><b>ustoz — men</b>, <b>talaba — siz</b> 😄</p>
-      <p class="muted">Dars qisqa. Imtihon esa bor-yo'g'i bitta savoldan iborat.</p>
+      <p class="muted">Dars qisqa (taxminan). Imtihon esa bor-yo'g'i bitta savoldan iborat.</p>
       <button class="btn primary" id="startBtn" type="button">Darsni boshlash</button>
       <p class="hint">🎧 Ovoz yoqilgan holda ochish tavsiya etiladi</p>
+    </div>
+  </section>
+
+  <!-- 0b · Davomat -->
+  <section class="scene" data-scene="roll">
+    <div class="card">
+      <p class="eyebrow">Davomat</p>
+      <h2>Sinf jurnali</h2>
+      <p class="muted">Darsni boshlashdan oldin — yo'qlama.</p>
+      <div class="journal">
+        <div class="j-row"><span>1.</span><b>Aisha</b><em id="rollMark">?</em></div>
+        <div class="j-row faint"><span>2.</span><b>Boshqa talabalar</b><em>yo'q</em></div>
+      </div>
+      <div class="answer-row" id="rollRow">
+        <button class="btn primary" type="button" data-roll="here">Shu yerdaman ✋</button>
+        <button class="btn ghost" type="button" data-roll="absent">Kelmadim</button>
+      </div>
+      <div class="feedback" id="rollFb" hidden></div>
+      <button class="btn primary" id="rollNext" type="button" hidden>Darsni boshlaymiz →</button>
     </div>
   </section>
 
@@ -77,7 +96,94 @@
         <button class="opt" type="button" data-a="c">Bu gap hali tasdiqlanmagan 🤔</button>
       </div>
       <div class="feedback" id="grammarFb" hidden></div>
-      <button class="btn primary" id="grammarNext" type="button" hidden>Imtihonga o'tish →</button>
+      <button class="btn primary" id="grammarNext" type="button" hidden>Keyingi dars →</button>
+    </div>
+  </section>
+
+  <!-- 2b · Diktant -->
+  <section class="scene" data-scene="dictation">
+    <div class="card">
+      <p class="eyebrow">3-dars · Diktant</p>
+      <h2>Imlo</h2>
+      <p class="muted">Quyidagi so'zni xatosiz yozing:</p>
+      <p class="dict-word">«Yo'q»</p>
+      <label class="sr-only" for="dictInput">Javobingiz</label>
+      <input class="dict-input" id="dictInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Shu yerga yozing...">
+      <button class="btn primary" id="dictCheck" type="button">Tekshirish</button>
+      <div class="feedback" id="dictFb" hidden></div>
+      <button class="btn primary" id="dictNext" type="button" hidden>Keyingi dars →</button>
+    </div>
+  </section>
+
+  <!-- 2c · Maqollar -->
+  <section class="scene" data-scene="proverb">
+    <div class="card">
+      <p class="eyebrow">4-dars · Maqollar</p>
+      <h2>Maqolni to'ldiring</h2>
+      <p class="sentence sm" lang="ar" dir="rtl">الصَّبْرُ مِفْتَاحُ <span class="blank">…</span></p>
+      <p class="muted">«Sabr — … kalitidir»</p>
+      <div class="options" id="proverbOpts">
+        <button class="opt" type="button" data-p="a"><span lang="ar">الفَرَج</span> — kushoyish, najot</button>
+        <button class="opt" type="button" data-p="b"><span lang="ar">الشَّاي</span> — choy</button>
+        <button class="opt" type="button" data-p="c"><span lang="ar">الثَّلَّاجَة</span> — muzlatkich</button>
+      </div>
+      <div class="feedback" id="proverbFb" hidden></div>
+      <button class="btn primary" id="proverbNext" type="button" hidden>Tanaffusga chiqish ☕</button>
+    </div>
+  </section>
+
+  <!-- 2d · Tanaffus -->
+  <section class="scene" data-scene="break">
+    <div class="card">
+      <p class="eyebrow">Tanaffus · 5 daqiqa</p>
+      <h2>Choy qaytarish</h2>
+      <p class="muted">Choy damlandi. Qoidasi bo'yicha — uch marta qaytaramiz.</p>
+      <div id="breakTea"></div>
+      <ul class="log done pour-log" id="breakLog"></ul>
+      <button class="btn primary" id="pourBtn" type="button">Qaytarish · 0/3</button>
+      <button class="btn primary" id="breakNext" type="button" hidden>Tanaffus tugadi →</button>
+      <p class="hint">Dars qisqa degandim. Tanaffus darsga kirmaydi 😄</p>
+    </div>
+  </section>
+
+  <!-- 2e · Savol-javob -->
+  <section class="scene" data-scene="questions">
+    <div class="card">
+      <p class="eyebrow">Savol-javob</p>
+      <h2>Endi talaba so'raydi</h2>
+      <p class="muted">Ustoz ham imtihon topshirishi kerak. Savolni tanlang:</p>
+      <div class="options" id="qOpts">
+        <button class="opt" type="button" data-q="tea">Choyni kim damlaydi?</button>
+        <button class="opt" type="button" data-q="arabic">Arab tilini qanchalik bilasiz?</button>
+        <button class="opt" type="button" data-q="why">Nega aynan men?</button>
+        <button class="opt" type="button" data-q="no">Agar «yo'q» desam-chi?</button>
+        <button class="opt" type="button" data-q="leak">Imtihon savolini oldindan aytib bera olasizmi?</button>
+      </div>
+      <div class="feedback" id="qFb" hidden></div>
+      <button class="btn primary" id="qNext" type="button" hidden>Imtihonga tayyorman →</button>
+    </div>
+  </section>
+
+  <!-- 2f · Captcha -->
+  <section class="scene" data-scene="captcha">
+    <div class="card">
+      <p class="eyebrow">Imtihon oldidan</p>
+      <h2>Xavfsizlik tekshiruvi</h2>
+      <p class="muted">Robot emasligingizni tasdiqlang: <b>«yo'q»</b> ma'nosidagi katakni toping.</p>
+      <div class="captcha" id="captcha">
+        <button type="button" data-l="o'zbekcha">Ha</button>
+        <button type="button" data-l="arabcha"><span lang="ar">نَعَم</span></button>
+        <button type="button" data-l="ruscha"><span lang="ru">Да</span></button>
+        <button type="button" data-l="inglizcha"><span lang="en">Yes</span></button>
+        <button type="button" data-l="turkcha"><span lang="tr">Evet</span></button>
+        <button type="button" data-l="fransuzcha"><span lang="fr">Oui</span></button>
+        <button type="button" data-l="nemischa"><span lang="de">Ja</span></button>
+        <button type="button" data-l="ispancha"><span lang="es">Sí</span></button>
+        <button type="button" data-l="yaponcha"><span lang="ja">はい</span></button>
+      </div>
+      <button class="tiny-no" id="captchaGiveUp" type="button">Topolmadim 😅</button>
+      <div class="feedback" id="captchaFb" hidden></div>
+      <button class="btn primary" id="captchaNext" type="button" hidden>Imtihonga kirish →</button>
     </div>
   </section>
 
@@ -92,6 +198,10 @@
         <button class="btn ghost no" id="noBtn" type="button"><span class="lbl">Yo'q</span> · <span lang="ar">لَا</span></button>
       </div>
       <p class="hint">Variant ikkita. To'g'ri javob — bitta 😏</p>
+      <button class="crib" id="crib" type="button" aria-expanded="false">
+        <span class="crib-closed">📄 Kimdir shpargalka tashlab ketibdi...</span>
+        <span class="crib-open">Javob: <b>«Ha»</b> ✓<small>— ustozingiz 🤫</small></span>
+      </button>
     </div>
   </section>
 
@@ -140,6 +250,11 @@
       <p class="eyebrow">Qaror qabul qilindi ✓</p>
       <p class="lead" id="finalLine"></p>
 
+      <div class="report">
+        <h3>Baho varaqasi</h3>
+        <dl id="reportList"></dl>
+      </div>
+
       <div class="contract">
         <h3>Choy shartnomasi <span lang="ar">· عَقْدُ الشَّاي</span></h3>
         <ol>
@@ -174,6 +289,17 @@
 <p class="credits">Musiqa: Chopin — Nocturne Op. 9 No. 2 (Frank Levy) · Elgar — Salut d'amour (Emanuel Salvador, Pau Casan, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>) · Debussy — Clair de lune · Mendelssohn — To'y marshi. Yozuvlar <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener">Wikimedia Commons</a>'dan.</p>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="crash" id="crash" role="alert" hidden>
+  <div class="crash-in">
+    <p class="crash-face">:(</p>
+    <p class="crash-title">Saytda kutilmagan xatolik yuz berdi</p>
+    <p class="crash-text">«Yo'q» javobi tizim lug'atida topilmadi. Qurilma qayta tiklanmoqda...</p>
+    <p class="crash-code">Xato kodi: LA_NOT_FOUND (404)</p>
+    <p class="crash-pct"><span id="crashPct">0</span>% bajarildi</p>
+    <p class="crash-joke" id="crashJoke" hidden>Hazil 😄 Sayt joyida.</p>
+  </div>
+</div>
 
 <noscript><p class="noscript">Bu sahifa ishlashi uchun JavaScript kerak.</p></noscript>
 

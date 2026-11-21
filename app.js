@@ -123,9 +123,11 @@
   /* =========================================================
      Sahnalar
      ========================================================= */
-  const ORDER = { intro: 0, vocab: 1, grammar: 2, exam: 3, reject: 3, last: 3, final: 4 };
-  const LABELS = ['Muqaddima', "Lug'at", 'Grammatika', 'Imtihon', 'Tugadi ✓'];
-  const MOODS = { intro: 'calm', vocab: 'calm', grammar: 'play', exam: 'play', reject: 'suspense', last: 'play', final: 'celebrate' };
+  const ORDER = { intro: 0, roll: 0, vocab: 1, grammar: 2, dictation: 2, proverb: 2, break: 3, questions: 4, captcha: 5, exam: 5, reject: 5, last: 5, final: 6 };
+  const LABELS = ['Muqaddima', "Lug'at", 'Grammatika', 'Tanaffus', 'Savol-javob', 'Imtihon', 'Tugadi ✓'];
+  const MOODS = { intro: 'calm', roll: 'calm', vocab: 'calm', grammar: 'play', dictation: 'play', proverb: 'play', break: 'calm', questions: 'calm', captcha: 'play', exam: 'play', reject: 'suspense', last: 'play', final: 'celebrate' };
+  // Baho varaqasi uchun
+  const G = { roll: null, grammar: null, proverb: null, breakSecs: null, noCaught: false };
   let current = 'intro';
 
   function updateSteps(k) {
@@ -149,6 +151,8 @@
   }
 
   const enter = {
+    break() { $('#breakTea').innerHTML = teaSVG(false); breakStart = Date.now(); },
+    captcha() { const box = $('#captcha'); $$('#captcha button').sort(() => Math.random() - 0.5).forEach(t => box.appendChild(t)); },
     exam() { $('#examTea').innerHTML = teaSVG(false); },
     reject() { runReject(); },
     last() { resetStubborn(); },
@@ -159,8 +163,31 @@
   $('#startBtn').addEventListener('click', () => {
     if (Sound.isOn()) Sound.start();
     paintSound();
-    go('vocab');
+    go('roll');
   });
+
+  /* ---------- 0b. Davomat ---------- */
+  $$('#rollRow .btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (G.roll) return;
+      G.roll = btn.dataset.roll;
+      const mark = $('#rollMark');
+      mark.textContent = '✓ keldi';
+      mark.classList.add('ok');
+      const fb = $('#rollFb');
+      if (G.roll === 'absent') {
+        fb.innerHTML = `Kelmagan talaba «kelmadim» deb javob bera olmaydi 🤨<br>Mantiq darsi ham kerakmi, ustoza? Jurnalga «keldi ✓» deb yozib qo'ydim.`;
+        Sound.sfx('nope');
+      } else {
+        fb.innerHTML = `Barakalla ✓ Jurnalga yozildi: <b>Aisha — keldi, kayfiyati a'lo</b>`;
+        Sound.sfx('chime');
+      }
+      $$('#rollRow .btn').forEach(b => { if (b !== btn) b.style.opacity = '.5'; });
+      fb.hidden = false;
+      $('#rollNext').hidden = false;
+    });
+  });
+  $('#rollNext').addEventListener('click', () => go('vocab'));
 
   /* ---------- 1. Lug'at ---------- */
   const flipped = new Set();
@@ -192,6 +219,7 @@
       $$('#grammarOpts .opt').forEach(b => b.classList.remove('chosen'));
       btn.classList.add('chosen');
       const g = GRAMMAR[btn.dataset.a];
+      G.grammar = btn.dataset.a;
       const fb = $('#grammarFb');
       fb.hidden = true;
       void fb.offsetWidth; // animatsiyani qayta boshlash
@@ -201,7 +229,142 @@
       Sound.sfx(g.sfx);
     });
   });
-  $('#grammarNext').addEventListener('click', () => go('exam'));
+  $('#grammarNext').addEventListener('click', () => go('dictation'));
+
+  /* ---------- 2b. Diktant: klaviatura o'zi «Ha, roziman» deb yozadi ---------- */
+  const DICT = Array.from('Ha, roziman');
+  const dictInput = $('#dictInput');
+  let dictBusy = false;
+  dictInput.addEventListener('input', () => {
+    if (dictBusy) return;
+    const n = Array.from(dictInput.value).length;
+    const out = DICT.slice(0, Math.min(n, DICT.length)).join('');
+    if (dictInput.value !== out) {
+      dictInput.value = out;
+      try { dictInput.setSelectionRange(out.length, out.length); } catch (e) {}
+    }
+  });
+  async function dictCheck() {
+    if (dictBusy || !$('#dictNext').hidden) return;
+    const n = Array.from(dictInput.value).length;
+    if (n === 0) {
+      Sound.sfx('nope');
+      toast("Hali hech narsa yozmadingiz-ku, ustoza 😄");
+      dictInput.focus();
+      return;
+    }
+    dictBusy = true;
+    for (let i = n; i < DICT.length; i++) {
+      dictInput.value = DICT.slice(0, i + 1).join('');
+      await wait(70);
+    }
+    dictBusy = false;
+    dictInput.blur();
+    const fb = $('#dictFb');
+    fb.innerHTML = `Imlo — <b>5</b> ✓<br>Faqat bir narsa: siz «Yo'q» deb yozmoqchi edingiz, klaviatura esa «Ha, roziman» deb yozdi. Bu saytdagi avtokorrektor shunday sozlangan 😄`;
+    fb.hidden = false;
+    $('#dictCheck').hidden = true;
+    $('#dictNext').hidden = false;
+    Sound.sfx('chime');
+  }
+  $('#dictCheck').addEventListener('click', dictCheck);
+  dictInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); dictCheck(); } });
+  $('#dictNext').addEventListener('click', () => go('proverb'));
+
+  /* ---------- 2c. Maqollar ---------- */
+  const PROVERB = {
+    a: { sfx: 'chime', html: `<b lang="ar">مُمْتَاز!</b> «<span lang="ar">الصَّبْرُ مِفْتَاحُ الفَرَج</span>» — sabr kushoyish kalitidir. Men ham shu maqolga amal qilib, javobni sabr bilan kutyapman 😌` },
+    b: { sfx: 'pop', html: `Mantiqan to'g'ri, lekin maqolda unaqa emas 😄 To'g'ri javob — «<span lang="ar">الفَرَج</span>». Garchi... sabr bilan damlangan choy ham ko'p eshiklarni ochadi ☕` },
+    c: { sfx: 'nope', html: `Ustoza! 😳 Muzlatkichning kaliti bo'lmaydi-ku. To'g'ri javob — «<span lang="ar">الفَرَج</span>». Javobingizni «ijodiy» deb baholayman 😄` }
+  };
+  $$('#proverbOpts .opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#proverbOpts .opt').forEach(b => b.classList.remove('chosen'));
+      btn.classList.add('chosen');
+      G.proverb = btn.dataset.p;
+      const p = PROVERB[G.proverb];
+      const fb = $('#proverbFb');
+      fb.hidden = true; void fb.offsetWidth;
+      fb.innerHTML = p.html;
+      fb.hidden = false;
+      $('#proverbNext').hidden = false;
+      Sound.sfx(p.sfx);
+    });
+  });
+  $('#proverbNext').addEventListener('click', () => go('break'));
+
+  /* ---------- 2d. Tanaffus: choy qaytarish ---------- */
+  const POUR_LINES = ['Birinchisi — loy', 'Ikkinchisi — moy', "Uchinchisi — choy ☕ Endi ichsa bo'ladi!"];
+  let pours = 0, breakStart = 0;
+  $('#pourBtn').addEventListener('click', () => {
+    if (pours >= 3) return;
+    pours++;
+    $('#breakTea').innerHTML = teaSVG(true);
+    const li = document.createElement('li');
+    li.className = 'pop-in';
+    li.textContent = POUR_LINES[pours - 1];
+    $('#breakLog').appendChild(li);
+    $('#pourBtn').textContent = `Qaytarish · ${pours}/3`;
+    Sound.sfx(pours === 3 ? 'chime' : 'pop');
+    if (pours === 3) {
+      G.breakSecs = Math.max(1, Math.round((Date.now() - breakStart) / 1000));
+      $('#pourBtn').hidden = true;
+      setTimeout(() => {
+        $('#breakNext').hidden = false;
+        toast(`Tanaffus 5 daqiqa edi. Siz ${G.breakSecs} soniyada tugatdingiz — a'lochi talaba 😄`, 3800);
+      }, 900);
+    }
+  });
+  $('#breakNext').addEventListener('click', () => go('questions'));
+
+  /* ---------- 2e. Savol-javob: talaba so'raydi ---------- */
+  const ANSWERS = {
+    tea: `Navbat bilan: juft kunlari — men, toq kunlari — ham men 😄<br>Sizdan faqat «choy tayyor» xabarini tasdiqlash talab qilinadi ✓`,
+    arabic: `«<span lang="ar">نَعَم</span>», «<span lang="ar">بَلَى</span>» va «<span lang="ar">شَاي</span>». Bugungi dars uchun yetarli. Qolganini, inshaalloh, ustozam o'rgatadi 😌`,
+    why: `Chunki ilm, odob va sabr bir insonda jamlangani kamdan-kam uchraydi. Bunday «grammatika»ni hech bir kitobdan topolmadim 📚`,
+    no: `Bu savol bugungi dasturga kirmagan (1-darsga qarang 📚)<br>Jiddiy javob esa: qaroringiz qanday bo'lsa ham, hurmat qilaman. Choy taklifi esa kuchda qoladi ☕`,
+    leak: `Yo'q 😄<br>Ko'rdingizmi, bu saytda «yo'q» so'zini faqat ustoz ishlata oladi. Bugun ustoz — men.`
+  };
+  const asked = new Set();
+  $$('#qOpts .opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#qOpts .opt').forEach(b => b.classList.remove('chosen'));
+      btn.classList.add('chosen', 'asked');
+      asked.add(btn.dataset.q);
+      const fb = $('#qFb');
+      fb.hidden = true; void fb.offsetWidth;
+      fb.innerHTML = ANSWERS[btn.dataset.q];
+      fb.hidden = false;
+      Sound.sfx(btn.dataset.q === 'leak' ? 'nope' : 'pop');
+      if (asked.size >= 2) $('#qNext').hidden = false;
+      if (asked.size === 5) setTimeout(() => toast("Hamma savolni berdingiz. Ko'p so'raydigan talaba — a'lochi talaba 😄"), 1400);
+    });
+  });
+  $('#qNext').addEventListener('click', () => go('captcha'));
+
+  /* ---------- 2f. Captcha: «yo'q»ni toping ---------- */
+  let captchaTries = 0, captchaDone = false;
+  function finishCaptcha() {
+    if (captchaDone) return;
+    captchaDone = true;
+    const fb = $('#captchaFb');
+    fb.innerHTML = `Tekshiruv yakunlandi ✓<br>«Yo'q» topilmadi — chunki u yo'q. Tizim xulosasi: siz robot emassiz. Robot allaqachon taslim bo'lgan bo'lardi 🤖`;
+    fb.hidden = false;
+    $('#captchaGiveUp').hidden = true;
+    $('#captchaNext').hidden = false;
+    Sound.sfx('chime');
+  }
+  $$('#captcha button').forEach(tile => {
+    tile.addEventListener('click', () => {
+      tile.classList.add('seen');
+      toast(`Bu ham «ha» ekan — ${tile.dataset.l} 😄`);
+      Sound.sfx('nope');
+      captchaTries++;
+      if (captchaTries >= 3) setTimeout(finishCaptcha, 700);
+    });
+  });
+  $('#captchaGiveUp').addEventListener('click', finishCaptcha);
+  $('#captchaNext').addEventListener('click', () => go('exam'));
 
   /* ---------- 3. Imtihon: qochqoq «Yo'q» tugmasi ---------- */
   const yesBtn = $('#yesBtn');
@@ -296,8 +459,48 @@
       tryEscape(e.clientX || r.left + r.width / 2, e.clientY || r.top + r.height / 2);
       return;
     }
+    if (crashing) return;
+    G.noCaught = true;
+    fakeCrash().then(() => go('reject'));
+  });
+
+  /* Soxta «sayt buzildi» ekrani */
+  let crashing = false;
+  async function fakeCrash() {
+    crashing = true;
+    const el = $('#crash'), pct = $('#crashPct'), joke = $('#crashJoke');
+    joke.hidden = true;
+    pct.textContent = '0';
+    el.hidden = false;
+    void el.offsetWidth;
+    el.classList.add('show');
+    Sound.sfx('nope');
+    let p = 0;
+    while (p < 100) {
+      await wait(rnd(70, 190));
+      p = Math.min(100, p + Math.round(rnd(4, 14)));
+      pct.textContent = String(p);
+    }
+    await wait(350);
+    joke.hidden = false;
     Sound.sfx('pop');
-    go('reject');
+    await wait(1500);
+    el.classList.remove('show');
+    await wait(450);
+    el.hidden = true;
+    crashing = false;
+  }
+
+  /* Shpargalka */
+  $('#crib').addEventListener('click', () => {
+    const c = $('#crib');
+    const open = !c.classList.contains('open');
+    c.classList.toggle('open', open);
+    c.setAttribute('aria-expanded', String(open));
+    if (open) {
+      Sound.sfx('pop');
+      toast('Imtihonda shpargalka taqiqlangan... lekin bu safar mumkin 😉');
+    }
   });
 
   window.addEventListener('resize', () => {
@@ -425,7 +628,23 @@
     stubborn: "Uzoq o'yladingiz, lekin to'g'ri xulosaga keldingiz. Olimlarga xos sabr 😄"
   };
 
+  function renderReport() {
+    const sm = t => ` <small>(${t})</small>`;
+    const rows = [
+      ['Davomat', '5' + (G.roll === 'absent' ? sm("«kelmadim» desa ham") : '')],
+      ["Lug'at", '5'],
+      ['Grammatika', G.grammar === 'b' ? '4' + sm("fe'l qidirdi 😄") : '5'],
+      ['Diktant', '5' + sm('avtokorrektor yordamida')],
+      ['Maqollar', G.proverb === 'c' ? '3' + sm('muzlatkich 😳') : G.proverb === 'b' ? '5' + sm('choy ham kalit') : '5'],
+      ['Choy qaytarish', '5+' + (G.breakSecs ? sm(`${G.breakSecs} soniyada`) : '')],
+      ["«Yo'q»ni quvish", G.noCaught ? '3' + sm("ushladingiz, foydasi bo'lmadi 😄") : escapes > 0 ? '2' + sm('ushlay olmadingiz') : '—' + sm("kerak bo'lmadi")],
+      ['Odob', '5+']
+    ];
+    $('#reportList').innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  }
+
   function showFinal(choice) {
+    renderReport();
     $('#finalLine').innerHTML = FINALS[choice] || FINALS.ha;
     $('#finalTea').innerHTML = teaSVG(true);
     Sound.sfx('fanfare');
@@ -455,7 +674,58 @@
     $$('#grammarOpts .opt').forEach(b => b.classList.remove('chosen'));
     $('#grammarFb').hidden = true;
     $('#grammarNext').hidden = true;
+    // yangi sahnalar
+    Object.assign(G, { roll: null, grammar: null, proverb: null, breakSecs: null, noCaught: false });
+    $('#rollMark').textContent = '?'; $('#rollMark').classList.remove('ok');
+    $$('#rollRow .btn').forEach(b => { b.style.opacity = ''; });
+    ['#rollFb', '#rollNext', '#dictFb', '#dictNext', '#proverbFb', '#proverbNext', '#breakNext', '#qFb', '#qNext', '#captchaFb', '#captchaNext'].forEach(s => { $(s).hidden = true; });
+    dictInput.value = ''; $('#dictCheck').hidden = false;
+    $$('#proverbOpts .opt, #qOpts .opt').forEach(b => b.classList.remove('chosen', 'asked'));
+    pours = 0; $('#breakLog').innerHTML = ''; $('#pourBtn').hidden = false; $('#pourBtn').textContent = 'Qaytarish · 0/3';
+    asked.clear();
+    captchaTries = 0; captchaDone = false; $$('#captcha button').forEach(t => t.classList.remove('seen')); $('#captchaGiveUp').hidden = false;
+    $('#crib').classList.remove('open'); $('#crib').setAttribute('aria-expanded', 'false');
+    idleShown.clear();
     go('intro');
+  });
+
+  /* =========================================================
+     Kutilmagan hazillar: mudrash va boshqa oynaga o'tish
+     ========================================================= */
+  const quiet = () => current === 'intro' || current === 'final' || crashing;
+  let lastAct = Date.now();
+  const idleShown = new Set();
+  ['pointerdown', 'keydown', 'scroll', 'touchstart', 'mousemove'].forEach(ev =>
+    document.addEventListener(ev, () => { lastAct = Date.now(); }, { passive: true }));
+  setInterval(() => {
+    if (document.hidden || quiet() || idleShown.has(current)) return;
+    if (Date.now() - lastAct > 35000) {
+      idleShown.add(current);
+      lastAct = Date.now();
+      toast('Ustoza, uxlab qolmadingizmi? 😴<br>Dars davom etyapti ☕', 3800);
+      Sound.sfx('chime');
+    }
+  }, 5000);
+
+  const baseTitle = document.title;
+  const AWAY = [
+    "Qaytdingizmi? Jurnalga «kechikdi» deb yozmadim, xavotir olmang 😄",
+    'Yana qayoqqa ketdingiz? Choy sovib qoldi 🫖',
+    "Talaba darsdan qochmaydi, ustoza 😄"
+  ];
+  let hiddenAt = 0, awayCount = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      hiddenAt = Date.now();
+      if (!quiet()) document.title = 'Ustoza, dars tugamadi! ☕';
+    } else {
+      document.title = baseTitle;
+      if (!quiet() && Date.now() - hiddenAt > 2500) {
+        toast(AWAY[awayCount % AWAY.length], 3600);
+        awayCount++;
+        lastAct = Date.now();
+      }
+    }
   });
 
   /* =========================================================
