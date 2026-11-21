@@ -194,12 +194,59 @@ const Sound = (() => {
   }
 
   /* ---- Boshqaruv ---- */
+  const listeners = [];
+  const notify = () => listeners.forEach(fn => { try { fn(); } catch (e) {} });
+
   function start() {
     if (initFx() && on && ctx.state === 'suspended') ctx.resume();
     if (started) return;
     started = true;
     if (cur !== mood) load(mood);
     if (on) playNow();
+    disarm();
+    notify();
+  }
+
+  /* ---- Avtomatik boshlash ----
+     Sahifa ochilishi bilan chalishga urinamiz. Brauzer ruxsat bermasa
+     (telefonlarda deyarli doim), ekranning istalgan joyiga birinchi
+     tegish yoki tugma bosishda yonadi. */
+  const GESTURES = ['pointerdown', 'pointerup', 'touchend', 'keydown', 'click'];
+  let armed = false;
+
+  function autoStart() {
+    if (started || !on) return;
+    if (cur !== mood) load(mood);
+    try { audio.volume = 0; } catch (e) {}
+    const p = audio.play();
+    const ok = () => {
+      if (started) return;
+      started = true;
+      fadeTo(TRACKS[cur].vol, 1500);
+      disarm();
+      notify();
+    };
+    if (p && p.then) p.then(ok, arm); else ok();
+  }
+
+  function onGesture(e) {
+    if (started || !on) { disarm(); return; }
+    // ovoz tugmasining o'zi boshlaydi — ikki marta bosilgandek bo'lmasin
+    if (e.target && e.target.closest && e.target.closest('#soundBtn')) return;
+    if (initFx() && ctx.state === 'suspended') ctx.resume();
+    autoStart();
+  }
+
+  function arm() {
+    if (armed || started) return;
+    armed = true;
+    GESTURES.forEach(ev => document.addEventListener(ev, onGesture, { capture: true, passive: true }));
+  }
+
+  function disarm() {
+    if (!armed) return;
+    armed = false;
+    GESTURES.forEach(ev => document.removeEventListener(ev, onGesture, { capture: true }));
   }
 
   function setOn(v) {
@@ -210,9 +257,10 @@ const Sound = (() => {
       master.gain.setTargetAtTime(on ? 0.8 : 0, t, 0.08);
       if (on) ctx.resume();
     }
-    if (!started) return;
+    if (!started) { if (!on) disarm(); notify(); return; }
     if (on) { if (cur !== mood) load(mood); playNow(); }
     else fadeTo(0, 400, () => { if (!on) audio.pause(); });
+    notify();
   }
 
   function toggle() { setOn(!on); if (on && !started) start(); return on; }
@@ -223,11 +271,13 @@ const Sound = (() => {
     else if (on) { playNow(); if (ctx) ctx.resume(); }
   });
 
-  // Birinchi kuyni oldindan yuklab qo'yamiz — tugma bosilishi bilan chalinadi
+  // Birinchi kuyni yuklab, darhol chalishga urinamiz
   load(mood);
+  autoStart();
 
   return {
     start, toggle, setOn, sfx,
+    onChange: fn => { listeners.push(fn); },
     setMood: m => { if (!m) return; mood = m; switchTo(m); },
     isOn: () => on,
     started: () => started

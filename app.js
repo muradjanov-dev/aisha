@@ -117,6 +117,8 @@
     else Sound.toggle();
     paintSound();
   });
+  Sound.onChange(paintSound);
+  paintSound();
 
   /* =========================================================
      Sahnalar
